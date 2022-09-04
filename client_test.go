@@ -63,6 +63,22 @@ func TestClientFetch(t *testing.T) {
 	t.Logf("fetched id %d", id)
 }
 
+func TestClientFetchUnixDomainSocket(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	app, _ := newTestAppAndListenSock(ctx, t)
+	c := NewClient(app.Listener.Addr().String())
+
+	id, err := c.Fetch()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id == 0 {
+		t.Error("could not fetch id > 0")
+	}
+	t.Logf("fetched id %d", id)
+}
+
 func TestClientMulti(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -17,13 +18,21 @@ type memcacheClient struct {
 	addr    string
 	conn    net.Conn
 	timeout time.Duration
+	network string
 	mu      sync.Mutex
 	rw      *bufio.ReadWriter
 }
 
 func newMemcacheClient(addr string) *memcacheClient {
+	var network string
+	if strings.HasPrefix(addr, "/") {
+		network = "unix"
+	} else {
+		network = "tcp"
+	}
 	return &memcacheClient{
 		addr:    addr,
+		network: network,
 		timeout: memcacheDefaultTimeout,
 	}
 }
@@ -36,7 +45,7 @@ func (c *memcacheClient) SetTimeout(t time.Duration) {
 
 func (c *memcacheClient) connect() error {
 	var err error
-	c.conn, err = net.DialTimeout("tcp", c.addr, c.timeout)
+	c.conn, err = net.DialTimeout(c.network, c.addr, c.timeout)
 	c.rw = bufio.NewReadWriter(bufio.NewReader(c.conn), bufio.NewWriter(c.conn))
 	return err
 }
